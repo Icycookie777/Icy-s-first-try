@@ -1,0 +1,134 @@
+import random
+
+# Constants
+NODE_TYPES = ["Combat", "Temple", "Blacksmith", "Wizard Tower", "Merchant", "Healing"]
+GODS = ["Fire", "Water", "Ice", "Lightning", "Earth", "Air", "Metal", "Space", "Time", "Gravity", "Light", "Dark", "Fae", "Corruption"]
+SYNERGIES = {
+    ("Fire", "Lightning"): "Stormcaller",
+    ("Water", "Ice"): "Frozen Tides",
+    ("Light", "Dark"): "Twilight Balance",
+    ("Earth", "Metal"): "Forged in Stone",
+    ("Air", "Space"): "Astral Winds",
+    ("Time", "Gravity"): "Temporal Crush",
+    ("Fae", "Corruption"): "Blighted Bloom"
+}
+
+# Player Class
+class Player:
+    def __init__(self):
+        self.hp = 100
+        self.max_hp = 100
+        self.attack = 10
+        self.defense = 5
+        self.inventory = []
+        self.boons = []
+        self.xp = 0
+        self.level = 0
+
+    def take_damage(self, damage):
+        self.hp -= max(0, damage - self.defense)
+        if self.hp <= 0:
+            print("You have been defeated...")
+
+    def heal(self, amount):
+        self.hp = min(self.max_hp, self.hp + amount)
+
+    def add_boon(self, boon):
+        self.boons.append(boon)
+        print(f"You gained the {boon} boon!")
+
+    def check_synergies(self):
+        active_gods = [boon.split()[0] for boon in self.boons]
+        for (god1, god2), synergy in SYNERGIES.items():
+            if god1 in active_gods and god2 in active_gods:
+                print(f"Synergy Activated: {synergy}!")
+
+# Enemy Class
+class Enemy:
+    def __init__(self, name, hp, attack, defense):
+        self.name = name
+        self.hp = hp
+        self.attack = attack
+        self.defense = defense
+
+    def take_damage(self, damage):
+        self.hp -= max(0, damage - self.defense)
+        if self.hp <= 0:
+            print(f"{self.name} has been defeated!")
+
+# Node Class
+class Node:
+    def __init__(self, node_type):
+        self.node_type = node_type
+
+    def interact(self, player):
+        if self.node_type == "Combat":
+            self.combat(player)
+        elif self.node_type == "Temple":
+            self.temple(player)
+        elif self.node_type == "Healing":
+            self.healing(player)
+
+    def combat(self, player):
+        enemy = Enemy("Goblin", 30, 10, 5)
+        print("You encounter a Goblin!")
+        while enemy.hp > 0 and player.hp > 0:
+            print(f"Player HP: {player.hp} | Enemy HP: {enemy.hp}")
+            action = input("Do you want to (1) Attack or (2) Block? ")
+            if action == "1":
+                enemy.take_damage(player.attack)
+            elif action == "2":
+                player.take_damage(enemy.attack // 2)
+            else:
+                print("Invalid action!")
+            if enemy.hp > 0:
+                player.take_damage(enemy.attack)
+        if player.hp > 0:
+            print("You defeated the Goblin!")
+            player.xp += 10
+
+    def temple(self, player):
+        print("You approach a temple.")
+        boons = random.sample(GODS, 3)
+        print("Choose a boon:")
+        for i, boon in enumerate(boons):
+            print(f"{i + 1}. {boon}")
+        choice = int(input("Enter the number of your choice: ")) - 1
+        player.add_boon(boons[choice])
+        player.check_synergies()
+
+    def healing(self, player):
+        print("You find a healing spring.")
+        player.heal(30)
+
+# Map Class
+class Map:
+    def __init__(self, loop):
+        self.nodes = []
+        self.loop = loop
+        self.generate_map()
+
+    def generate_map(self):
+        for _ in range(10):
+            node_type = random.choice(NODE_TYPES)
+            self.nodes.append(Node(node_type))
+
+    def explore(self, player):
+        for node in self.nodes:
+            node.interact(player)
+            if player.hp <= 0:
+                break
+
+# Main Game Loop
+def main():
+    player = Player()
+    loop = 1
+    while player.hp > 0:
+        print(f"\n--- Loop {loop} ---")
+        map = Map(loop)
+        map.explore(player)
+        loop += 1
+    print("Game Over! Thanks for playing.")
+
+if __name__ == "__main__":
+    main()
